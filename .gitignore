@@ -1,0 +1,15 @@
+# Local software environment
+tools/
+
+# Large reference files
+*.fna
+*.fa
+*.fasta
+
+# SLURM output
+*.log
+
+# intermediate files
+*.bam
+*.bai
+*.bed
