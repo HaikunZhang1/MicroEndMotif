@@ -28,8 +28,8 @@ The analysis was performed using:
 Clone the repository and enter the project directory:
 
 ```bash
-git clone XXX
-cd $microEndMotif
+git clone https://github.com/HaikunZhang1/microEndMotif.git
+cd microEndMotif
 ```
 Install all required software into the local `tools/` directory:
 
