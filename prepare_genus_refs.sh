@@ -17,7 +17,7 @@ REF_DIR="$PROJECT_DIR/refs"
 K2DB_FILE="$REF_DIR/library_report_K2_standard_20240112.tsv"
 K2DB_URL="https://genome-idx.s3.amazonaws.com/kraken/standard_20240112/library_report.tsv"
 
-mkdir -p "REF_DIR"
+mkdir -p "$REF_DIR"
 
 
 ########## Download Kraken2 library report ##########
@@ -49,7 +49,7 @@ while IFS= read -r GENUS || [[ -n "$GENUS" ]]; do
 
 	##### Extract genome URLs #####
 	awk -F '\t' -v g="$GENUS" '$1 == "bacteria" && index($2, g) {print $3}' "$K2DB_FILE" | sort -u > "$URL_FILE"
-	LINK_NUM=$(wc -l < "URL_FILE")
+	LINK_NUM=$(wc -l < "$URL_FILE")
 	echo "$GENUS: $LINK_NUM unique genome links"
 
 	if [[ $LINK_NUM -eq 0 ]]; then
@@ -60,19 +60,28 @@ while IFS= read -r GENUS || [[ -n "$GENUS" ]]; do
 
 	##### Download genome sequences #####
 	mkdir -p "$TMP_DIR"
+	WGET_LOG="$GENUS_DIR/wget.log"
+	
 	while IFS= read -r link; do
-		wget -c -P "$TMP_DIR" "$link"
+		wget -c -P "$TMP_DIR" -a "$WGET_LOG" "$link"
 	done < "$URL_FILE"
 
 
 	##### Combine genomes #####
 	> "$REF_FASTA_TMP"
 
-	while IFS= read -r file; do
+	for file in "$TMP_DIR"/GCF*.fna.gz; do
 		gzip -cd "$file" >> "$REF_FASTA_TMP"
-	done < <(find "$TMP_DIR" -type f -name "*.fna.gz" | sort)
+	done
 
-	mv "$REF_FASTA_TMP" "$REF_FASTA"
+	# Replace spaces in FASTA headers with underscores, better for index building
+	sed 's/ /_/g' "$REF_FASTA_TMP" > "$REF_FASTA"
+
+	# while IFS= read -r file; do
+	# 	gzip -cd "$file" >> "$REF_FASTA_TMP"
+	# done < <(find "$TMP_DIR" -type f -name "*.fna.gz" | sort)
+
+	rm -f "$REF_FASTA_TMP"
 
 
 	##### Remove tmp genome files #####
